@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Daily Meditation</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,300;0,400;1,300;1,400&family=Jost:wght@300;400&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f5f0eb;--surface:#ede7df;--surface2:#e4dcd3;--border:rgba(120,100,80,0.12);--text:#2d2420;--muted:rgba(45,36,32,0.5);--hint:rgba(45,36,32,0.25);--accent:#7a9e87;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Jost',sans-serif;font-weight:300;overflow:hidden;}
+body{display:flex;flex-direction:column;}
+body::before{content:'';position:fixed;inset:0;z-index:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;opacity:0.6;}
+.orb{position:fixed;border-radius:50%;filter:blur(80px);pointer-events:none;z-index:0;transition:background 2s ease;}
+.orb1{width:60vw;height:60vw;top:-15%;left:-15%;background:#bdd4c4;opacity:0.45;animation:drift1 14s ease-in-out infinite;}
+.orb2{width:50vw;height:50vw;bottom:-10%;right:-10%;background:#d4c0b0;opacity:0.35;animation:drift2 18s ease-in-out infinite;}
+@keyframes drift1{0%,100%{transform:translate(0,0);}50%{transform:translate(3%,4%);}}
+@keyframes drift2{0%,100%{transform:translate(0,0);}50%{transform:translate(-3%,-3%);}}
+.app{position:relative;z-index:1;display:flex;flex-direction:column;height:100vh;padding:env(safe-area-inset-top,20px) 0 env(safe-area-inset-bottom,16px);}
+.day-bar{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--border);flex-shrink:0;}
+.db{padding:13px 4px;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--muted);font-family:'Jost',sans-serif;font-weight:300;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;transition:all 0.3s;}
+.db.on{color:var(--accent);border-bottom-color:var(--accent);}
+.begin{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px 28px;}
+.b-day{font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;}
+.b-title{font-family:'Lora',serif;font-size:34px;font-weight:300;font-style:italic;color:var(--text);line-height:1.25;margin-bottom:18px;}
+.b-line{width:32px;height:1px;background:var(--accent);margin:0 auto 18px;opacity:0.6;}
+.b-desc{font-size:14px;color:var(--muted);line-height:1.8;max-width:270px;margin:0 auto 40px;}
+.b-btn{background:transparent;border:1px solid var(--accent);color:var(--accent);font-family:'Jost',sans-serif;font-weight:300;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;padding:14px 44px;border-radius:40px;cursor:pointer;transition:all 0.3s;}
+.b-btn:active{opacity:0.7;transform:scale(0.97);}
+.player{flex:1;display:flex;flex-direction:column;padding:24px 24px 16px;overflow:hidden;}
+.p-title{font-family:'Lora',serif;font-size:22px;font-weight:300;font-style:italic;color:var(--text);margin-bottom:4px;}
+.p-sub{font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:22px;}
+.ring-wrap{position:relative;width:120px;height:120px;margin:0 auto 20px;}
+.ring-svg{width:120px;height:120px;transform:rotate(-90deg);}
+.ring-track{fill:none;stroke:var(--border);stroke-width:1.5;}
+.ring-fill{fill:none;stroke:var(--accent);stroke-width:1.5;stroke-linecap:round;stroke-dasharray:345;stroke-dashoffset:345;transition:stroke-dashoffset 1s linear;}
+.ring-inner{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.ring-time{font-family:'Lora',serif;font-size:26px;font-weight:300;color:var(--text);line-height:1;}
+.ring-lbl{font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-top:4px;}
+.dots{display:flex;gap:7px;justify-content:center;margin-bottom:22px;}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--hint);transition:all 0.4s;}
+.dot.done{background:var(--accent);opacity:0.4;}
+.dot.cur{width:22px;border-radius:3px;background:var(--accent);}
+.step-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:8px;}
+.s-phase{font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);margin-bottom:7px;}
+.s-name{font-family:'Lora',serif;font-size:20px;font-weight:400;color:var(--text);margin-bottom:14px;line-height:1.3;}
+.s-body{font-size:15px;color:var(--muted);line-height:1.85;margin-bottom:14px;}
+.breath-card{background:var(--surface2);border-left:2px solid var(--accent);border-radius:0 8px 8px 0;padding:12px 14px;font-size:13px;color:var(--muted);line-height:1.75;margin-bottom:14px;}
+.breath-lbl{font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--accent);margin-bottom:5px;}
+.breath-circle{width:44px;height:44px;border-radius:50%;border:1px solid var(--accent);opacity:0;margin:0 auto 14px;transition:opacity 0.5s;}
+.breath-circle.show{opacity:0.35;animation:breathe 5s ease-in-out infinite;}
+@keyframes breathe{0%,100%{transform:scale(1);}50%{transform:scale(1.5);}}
+.bottom{flex-shrink:0;padding:10px 24px 4px;}
+.vol-row{display:flex;gap:12px;align-items:center;margin-bottom:10px;}
+.vl{font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--hint);white-space:nowrap;min-width:36px;}
+input[type=range]{flex:1;-webkit-appearance:none;height:1px;background:var(--border);border-radius:1px;outline:none;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--accent);cursor:pointer;}
+.ctrl-row{display:flex;gap:8px;}
+.cb{flex:1;padding:10px;border-radius:30px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:'Jost',sans-serif;font-weight:300;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;}
+.cb:active{opacity:0.6;}
+.cb.pause-btn{border-color:rgba(120,100,80,0.25);color:var(--text);}
+.status-row{display:flex;justify-content:center;padding-top:10px;}
+.spill{font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);padding:4px 14px;border-radius:20px;border:1px solid var(--border);}
+.spill.live{border-color:var(--accent);color:var(--accent);}
+.loading-voice{display:flex;align-items:center;gap:8px;justify-content:center;padding:8px 0;}
+.loading-voice .dot-anim{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:dotPulse 1.2s ease-in-out infinite;}
+.loading-voice .dot-anim:nth-child(2){animation-delay:0.2s;}
+.loading-voice .dot-anim:nth-child(3){animation-delay:0.4s;}
+@keyframes dotPulse{0%,80%,100%{transform:scale(0.6);opacity:0.4;}40%{transform:scale(1);opacity:1;}}
+.loading-voice span{font-size:11px;color:var(--muted);letter-spacing:0.08em;}
+.hidden{display:none !important;}
+</style>
+</head>
+<body>
+<div class="orb orb1" id="orb1"></div>
+<div class="orb orb2" id="orb2"></div>
+<div class="app">
+  <div class="day-bar">
+    <button class="db on" onclick="loadDay(0,this)">Mon</button>
+    <button class="db" onclick="loadDay(1,this)">Wed</button>
+    <button class="db" onclick="loadDay(2,this)">Fri</button>
+    <button class="db" onclick="loadDay(3,this)">Sun</button>
+  </div>
+  <div class="begin" id="beginScreen">
+    <div class="b-day" id="bDay">Monday · 20 min</div>
+    <div class="b-title" id="bTitle">Root into self-worth</div>
+    <div class="b-line"></div>
+    <div class="b-desc">Your session flows completely on its own. Soft music plays throughout. Just press begin, find stillness, and let the voice guide you.</div>
+    <button class="b-btn" onclick="beginSession()">Begin</button>
+  </div>
+  <div class="player hidden" id="playerScreen">
+    <div class="p-title" id="pTitle">Root into self-worth</div>
+    <div class="p-sub" id="pSub">Step 1 of 5 · Monday</div>
+    <div class="ring-wrap">
+      <svg class="ring-svg" viewBox="0 0 120 120">
+        <circle class="ring-track" cx="60" cy="60" r="55"/>
+        <circle class="ring-fill" id="ringFill" cx="60" cy="60" r="55"/>
+      </svg>
+      <div class="ring-inner">
+        <div class="ring-time" id="rTime">—</div>
+        <div class="ring-lbl" id="rLbl">remaining</div>
+      </div>
+    </div>
+    <div class="dots" id="stepDots"></div>
+    <div class="step-scroll" id="stepScroll">
+      <div class="s-phase" id="sPhase"></div>
+      <div class="s-name" id="sName"></div>
+      <div class="breath-circle" id="bCircle"></div>
+      <div class="s-body" id="sBody"></div>
+      <div id="bCard" class="hidden"><div class="breath-card"><div class="breath-lbl">Breathwork</div><div id="bText"></div></div></div>
+      <div class="loading-voice hidden" id="loadingVoice">
+        <div class="dot-anim"></div><div class="dot-anim"></div><div class="dot-anim"></div>
+        <span>Preparing voice...</span>
+      </div>
+    </div>
+  </div>
+  <div class="bottom hidden" id="bottomControls">
+    <div class="vol-row">
+      <span class="vl">Music</span>
+      <input type="range" id="mvol" min="0" max="1" step="0.05" value="0.22" oninput="setMusicVol(this.value)">
+      <span class="vl">Voice</span>
+      <input type="range" id="vvol" min="0" max="1" step="0.05" value="1.0" oninput="setVoiceGain(this.value)">
+    </div>
+    <div class="ctrl-row">
+      <button class="cb" onclick="skipStep()">Skip</button>
+      <button class="cb pause-btn" id="pauseBtn" onclick="togglePause()">Pause</button>
+      <button class="cb" onclick="restartSession()">Restart</button>
+    </div>
+    <div class="status-row"><span class="spill live" id="spill">Playing</span></div>
+  </div>
+</div>
+<script>
+// ── ElevenLabs config ─────────────────────────────────────────────
+var ELEVEN_KEY = 'sk_1378118a84a96824cd60f3ba243613b3e4722619ab8842c7';
+// Aria - warm, calm, natural female voice
+var ELEVEN_VOICE_ID = '9BWtsMINqrJLrRacOk9x';
+var ELEVEN_MODEL = 'eleven_turbo_v2_5';
+
+var SESSIONS=[
+ {title:"Root into self-worth",day:"Monday",mins:20,accent:"#7a9e87",orb1:"#bdd4c4",orb2:"#d0c8bc",steps:[
+  {name:"Arrive & settle",phase:"Opening",dur:120,text:"Find a comfortable position and gently close your eyes. Feel the ground beneath you — solid, reliable, holding you completely. Let your shoulders soften and drop. Unclench your jaw. Let your hands rest open. There is nowhere else you need to be right now. Just arrive here.",breath:"Let us begin with box breathing together. Breathe in slowly for four counts. Hold for four. Breathe out for four. Hold for four. Let each cycle be a little slower and a little softer than the last."},
+  {name:"Body scan",phase:"Listening inward",dur:180,text:"Bring your attention gently to the crown of your head. Without trying to change anything, just notice what is there. Slowly let your awareness travel downward through your forehead, your eyes, your jaw. Down through your neck and shoulders. Your chest. Your belly. Your lower back. All the way through your legs to the soles of your feet. Wherever you find tension, breathe a little warmth into that place. You are not fixing anything. You are just listening.",breath:null},
+  {name:"Heart connection",phase:"Opening to yourself",dur:240,text:"Place one hand gently over your heart. Feel the warmth there, the quiet rhythm. With each exhale, offer yourself these words as a quiet gift: I am enough, exactly as I am right now. You do not have to believe them fully yet. Just let them land somewhere. Breath by breath.",breath:"Breathe slowly into your chest for five counts. Exhale for five. Imagine that warmth beneath your hand spreading a little further outward with each breath."},
+  {name:"Inquiry",phase:"Meeting yourself",dur:480,text:"Ask yourself gently, with real curiosity rather than judgment: where in my body do I feel the need to prove myself? Do not answer with your thinking mind. Just feel for it. Maybe it lives as a tightness in your chest, or a held breath, or something heavy in your throat. Simply breathe into that place, without trying to dissolve it or explain it. You are bearing witness to yourself with great kindness. That is more than enough. You are already whole. Your worth has never needed to be earned.",breath:null},
+  {name:"Close & seal",phase:"Integration",dur:180,text:"Take one long slow breath in. Hold it gently at the top. And release. Bring to mind an image of yourself who knows, quietly and without doubt, that they are enough. Feel how they breathe, how they hold their body. Let that image settle into you. Two more slow breaths. And then, whenever you are ready, let your eyes gently open.",breath:null}
+ ]},
+ {title:"Release the need for approval",day:"Wednesday",mins:20,accent:"#9b8dc4",orb1:"#c8c0dc",orb2:"#d4c8bc",steps:[
+  {name:"Arrive & settle",phase:"Opening",dur:120,text:"Come to stillness. Let your breath be exactly as it is, no need to control it yet. Notice anything you have been carrying from the last couple of days. Conversations replaying. The feeling of being watched or judged. You do not need to carry any of it in here. This space is just for you.",breath:"The 4-7-8 breath to help you let go. Breathe in through your nose for four counts. Hold for seven. Exhale slowly through your mouth for eight, longer than the inhale, releasing. Repeat this three times."},
+  {name:"Name the pattern",phase:"Seeing clearly",dur:240,text:"Gently bring to mind a recent moment when you felt that familiar flicker — the anxiety of wondering what someone thought of you. Do not drop back into the emotion of it. Just observe it from a calm distance, like watching a scene in a film. And ask softly: what did I want from them in that moment? Approval? To be seen? To feel like I was enough? Whatever the answer is, just name it, tenderly.",breath:null},
+  {name:"Compassion drop",phase:"Releasing",dur:300,text:"That part of you that reaches for approval did not come from nowhere. It came from somewhere real, from a younger version of you for whom belonging felt essential. That part of you was doing its best. So rather than fighting it, see if you can offer it some compassion. Thank it for trying to protect you. And then, as gently as you can, imagine setting it down. Like a heavy bag you have been carrying for so long you forgot it was there. You are allowed to rest.",breath:"Sighing release: take a full breath in, then add one short sharp second inhale at the very top. Then let the exhale pour out of your mouth, a long audible sigh. Let something go with it. Do this five times."},
+  {name:"Inquiry",phase:"Meeting yourself",dur:360,text:"Ask yourself this, with real openness: what would I do, say, or be if I was not watching myself through someone else's eyes? Let the answer be whatever it is, with no editing. What feels most true about you when no one is watching? Sit with that. Your value does not shift based on what others think of you. Say it quietly inside yourself: I approve of myself.",breath:null},
+  {name:"Close & seal",phase:"Integration",dur:180,text:"Three slow full breaths. With each one, feel your own presence a little more clearly. Not performing, not seeking, just here. In your own body. Living your own life. When you feel ready, gently open your eyes and bring that steadiness with you.",breath:null}
+ ]},
+ {title:"Confident presence",day:"Friday",mins:20,accent:"#c4995a",orb1:"#ddd0b0",orb2:"#c8bca8",steps:[
+  {name:"Arrive & energize",phase:"Opening",dur:180,text:"Sit up a little taller. Roll your shoulders back and let them drop. Feel the ground beneath you, solid and steady. You belong in this moment. Confidence does not begin in the mind. It begins exactly here, in the body. Let us wake yours up gently.",breath:"Power breath: ten full rhythmic breaths, deep into the belly through your nose, out through your mouth, each one a little fuller. Then one final deep inhale, hold it for ten seconds, and release slowly through your mouth. Feel what that builds in you."},
+  {name:"Embodiment",phase:"Grounding",dur:180,text:"Notice how you are sitting right now. Are you taking up the space you deserve? You are allowed to. Feel the length of your spine, the width of your shoulders. Let your body quietly say: I belong here. Confidence is not loudness or performance. It is simply being at home in your own skin, without apology.",breath:null},
+  {name:"Victory recall",phase:"Building",dur:300,text:"Bring to mind one moment from this week, however small, when you acted from your own values. When you said what was true, or chose yourself, or simply followed through on something. Let that memory live fully in your body. Where do you feel it? Let it expand from that place. This is what real confidence feels like from the inside. Not borrowed. Yours.",breath:"Expansive breath: inhale slowly and fully for five counts, letting your chest open wide. Hold for two. Exhale for six. Let each breath deepen that feeling of quiet capability already living in you."},
+  {name:"Inquiry",phase:"Meeting yourself",dur:360,text:"Ask yourself honestly: what would I do next week if I trusted myself completely? Not the version of you that is afraid of getting it wrong, but the version that knows its own judgment. Let whatever arises come without filtering it. You trust yourself. You are capable. You move forward from your values, not from the need to prove anything to anyone.",breath:null},
+  {name:"Close & seal",phase:"Integration",dur:180,text:"Picture yourself moving through next week, unhurried, grounded, quietly sure of who you are. Three slow breaths, breathing that image in. Then open your eyes and carry it with you.",breath:null}
+ ]},
+ {title:"Ease into the unknown",day:"Sunday",mins:25,accent:"#b8788a",orb1:"#d4b8bc",orb2:"#c8bca8",steps:[
+  {name:"Arrive & soften",phase:"Opening",dur:180,text:"Lie down or settle into the most comfortable position you can find. This is your deepest session of the week and it asks nothing of you. No performance. No getting it right. Let the whole week dissolve around you like mist. The future is not here yet. There is only this breath. And then the next.",breath:"Extended exhale to begin. Breathe in for four counts, then breathe out slowly for eight. The long exhale, twice the length of the inhale, is the most direct signal you can give your nervous system that you are completely safe. Stay with this rhythm."},
+  {name:"Welcome the anxiety",phase:"Turning toward",dur:300,text:"Instead of pushing away any anxiety about the future, let us try something gentler. Invite it in, like a guest rather than an intruder. Where does it live in your body right now? Your chest, your throat, your stomach? Just find it. What does it actually feel like, beneath the story around it? Often anxiety is just energy that has not found a direction yet. You do not need to fix it. Just breathe around it, softly.",breath:null},
+  {name:"Leaf on water",phase:"Releasing",dur:300,text:"Imagine yourself sitting beside a slow quiet river in early morning light. The water is calm and unhurried. Take any fear about the future, any worry, any what if, and gently place it on a leaf. Watch the leaf catch the current. Watch it drift, slowly, away from you. You can pick it back up any time you choose. But right now, in this moment, you can simply watch it float.",breath:"Ocean breath: breathe in and out through your nose with a gentle constriction at the back of your throat, creating a soft rhythmic sound like distant waves. Let this sound anchor you right here, in this moment, in this body."},
+  {name:"Inquiry",phase:"Meeting yourself",dur:480,text:"Ask yourself this, as softly as you can: what is one thing I can trust about myself, no matter what the future holds? Let the answer be simple. It does not need to be grand. Maybe it is your resilience. Maybe it is that you keep showing up. Maybe it is your love for the people in your life, or simply that you have always found a way through. Rest with that one true thing. You trust yourself to handle what comes. You do not need to know everything now. You are safe in this moment.",breath:null},
+  {name:"Close & integrate",phase:"Integration",dur:240,text:"Place one hand on your heart and one on your belly. Feel the warmth of your own hands. The rise and fall of your own breath. This is you. This is home. Five slow complete breaths here, with nowhere to go. Then, when you feel ready, gently let your eyes open. Before you move, take a moment to write just one word in your journal, whatever arose today.",breath:null}
+ ]}
+];
+
+var C={di:0,si:0,playing:false,paused:false,rem:0,dur:0,iv:null,resting:false,rrem:0,started:false,audioLoading:false};
+var audioCtx=null,masterGain=null,musicGain=null,musicNodes=[],voiceGainNode=null;
+var currentAudio=null, audioCache={};
+
+function setAccent(s){document.documentElement.style.setProperty('--accent',s.accent);document.getElementById('orb1').style.background=s.orb1;document.getElementById('orb2').style.background=s.orb2;document.getElementById('ringFill').style.stroke=s.accent;}
+function loadDay(i,el){stopAll();C.di=i;C.si=0;C.started=false;document.querySelectorAll('.db').forEach(function(b){b.classList.remove('on');});el.classList.add('on');var s=SESSIONS[i];setAccent(s);document.getElementById('bDay').textContent=s.day+' · '+s.mins+' min';document.getElementById('bTitle').textContent=s.title;showBegin();}
+function showBegin(){document.getElementById('beginScreen').classList.remove('hidden');document.getElementById('playerScreen').classList.add('hidden');document.getElementById('bottomControls').classList.add('hidden');}
+function showPlayer(){document.getElementById('beginScreen').classList.add('hidden');document.getElementById('playerScreen').classList.remove('hidden');document.getElementById('bottomControls').classList.remove('hidden');}
+function beginSession(){C.started=true;C.si=0;try{initAudio();}catch(e){}showPlayer();var s=SESSIONS[C.di];document.getElementById('pTitle').textContent=s.title;renderStep();startStep();}
+
+function renderStep(){
+  var s=SESSIONS[C.di],step=s.steps[C.si];
+  document.getElementById('pSub').textContent='Step '+(C.si+1)+' of '+s.steps.length+' · '+s.day;
+  document.getElementById('sPhase').textContent=step.phase;
+  document.getElementById('sName').textContent=step.name;
+  document.getElementById('sBody').textContent=step.text;
+  var bc=document.getElementById('bCard'),ba=document.getElementById('bCircle');
+  if(step.breath){bc.classList.remove('hidden');document.getElementById('bText').textContent=step.breath;ba.classList.add('show');}
+  else{bc.classList.add('hidden');ba.classList.remove('show');}
+  renderDots();C.rem=step.dur;C.dur=step.dur;updTimer();updRing();
+  document.getElementById('stepScroll').scrollTop=0;
+}
+
+function renderDots(){var s=SESSIONS[C.di],h='';for(var i=0;i<s.steps.length;i++){if(i<C.si)h+='<div class="dot done"></div>';else if(i===C.si)h+='<div class="dot cur"></div>';else h+='<div class="dot"></div>';}document.getElementById('stepDots').innerHTML=h;}
+function fmt(s){var m=Math.floor(s/60),r=s%60;return m+':'+(r<10?'0':'')+r;}
+function updTimer(){if(C.resting){document.getElementById('rTime').textContent=C.rrem;document.getElementById('rLbl').textContent='breathe';return;}document.getElementById('rTime').textContent=C.rem>0?fmt(C.rem):'—';document.getElementById('rLbl').textContent='remaining';}
+function updRing(){var circ=2*Math.PI*55,pct=C.dur>0?C.rem/C.dur:1;document.getElementById('ringFill').style.strokeDashoffset=circ*pct;}
+
+// ── ElevenLabs TTS ────────────────────────────────────────────────
+async function speakElevenLabs(txt, onEnd) {
+  var cacheKey = txt.substring(0,40);
+  try {
+    document.getElementById('loadingVoice').classList.remove('hidden');
+    setSpill('Loading voice', false);
+
+    var audioData;
+    if (audioCache[cacheKey]) {
+      audioData = audioCache[cacheKey];
+    } else {
+      var resp = await fetch('https://api.elevenlabs.io/v1/text-to-speech/' + ELEVEN_VOICE_ID + '/stream', {
+        method: 'POST',
+        headers: {
+          'xi-api-key': ELEVEN_KEY,
+          'Content-Type': 'application/json',
+          'Accept': 'audio/mpeg'
+        },
+        body: JSON.stringify({
+          text: txt,
+          model_id: ELEVEN_MODEL,
+          voice_settings: {
+            stability: 0.75,          // warm, consistent
+            similarity_boost: 0.75,   // natural
+            style: 0.20,              // gentle expressiveness
+            use_speaker_boost: false  // softer, more intimate
+          }
+        })
+      });
+      if (!resp.ok) throw new Error('ElevenLabs API error: ' + resp.status);
+      var blob = await resp.blob();
+      audioData = URL.createObjectURL(blob);
+      audioCache[cacheKey] = audioData;
+    }
+
+    document.getElementById('loadingVoice').classList.add('hidden');
+    setSpill('Playing', true);
+
+    if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+    var audio = new Audio(audioData);
+    // Apply voice volume
+    audio.volume = parseFloat(document.getElementById('vvol').value);
+    currentAudio = audio;
+    audio.onended = function() { currentAudio = null; if (onEnd) onEnd(); };
+    audio.onerror = function() { currentAudio = null; if (onEnd) onEnd(); };
+    audio.play();
+  } catch(e) {
+    console.error('ElevenLabs error:', e);
+    document.getElementById('loadingVoice').classList.add('hidden');
+    setSpill('Playing', true);
+    // Graceful fallback to browser TTS
+    if (window.speechSynthesis) {
+      var u = new SpeechSynthesisUtterance(txt);
+      u.rate = 0.82; u.pitch = 1.0; u.volume = parseFloat(document.getElementById('vvol').value);
+      var vs = window.speechSynthesis.getVoices();
+      var v = vs.find(function(v){return v.name==='Samantha';}) || vs.find(function(v){return v.lang==='en-US';});
+      if (v) u.voice = v;
+      if (onEnd) u.onend = onEnd;
+      window.speechSynthesis.speak(u);
+    } else { if (onEnd) onEnd(); }
+  }
+}
+
+function stopCurrentAudio() {
+  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+  if (window.speechSynthesis) window.speechSynthesis.cancel();
+  document.getElementById('loadingVoice').classList.add('hidden');
+}
+
+function startStep(){
+  C.playing=true;C.paused=false;C.resting=false;
+  document.getElementById('pauseBtn').textContent='Pause';
+  setSpill('Loading voice',false);
+  var step=SESSIONS[C.di].steps[C.si];
+  var txt=step.name+'. '+step.text+(step.breath?' '+step.breath:'');
+  speakElevenLabs(txt, null);
+  clearInterval(C.iv);
+  C.iv=setInterval(tick,1000);
+}
+
+function tick(){
+  if(C.paused)return;
+  if(C.resting){
+    C.rrem--;
+    document.getElementById('rTime').textContent=C.rrem;
+    document.getElementById('rLbl').textContent='breathe';
+    if(C.rrem<=0){
+      C.resting=false;
+      var s=SESSIONS[C.di];
+      if(C.si<s.steps.length-1){C.si++;renderStep();startStep();}
+      else{
+        clearInterval(C.iv);C.playing=false;
+        document.getElementById('rTime').textContent='✦';
+        document.getElementById('rLbl').textContent='complete';
+        document.getElementById('ringFill').style.strokeDashoffset=0;
+        setSpill('Complete',true);
+        speakElevenLabs('Your meditation is complete. You showed up for yourself today, and that matters deeply. Rest here for as long as you need.', null);
+      }
+    }
+    return;
+  }
+  C.rem--;updTimer();updRing();
+  if(C.rem<=0){stopCurrentAudio();C.resting=true;C.rrem=16;setSpill('Rest',false);}
+}
+
+function togglePause(){
+  if(C.paused){
+    C.paused=false;
+    document.getElementById('pauseBtn').textContent='Pause';
+    setSpill('Playing',true);
+    var step=SESSIONS[C.di].steps[C.si];
+    speakElevenLabs(step.text, null);
+    if(currentAudio) currentAudio.volume=parseFloat(document.getElementById('vvol').value);
+  } else {
+    C.paused=true;
+    document.getElementById('pauseBtn').textContent='Resume';
+    setSpill('Paused',false);
+    stopCurrentAudio();
+  }
+}
+
+function setVoiceGain(v){if(currentAudio) currentAudio.volume=parseFloat(v);}
+
+function skipStep(){
+  if(!C.started)return;
+  clearInterval(C.iv);stopCurrentAudio();
+  var s=SESSIONS[C.di];
+  if(C.si<s.steps.length-1){C.si++;renderStep();startStep();}
+}
+
+function restartSession(){stopAll();C.started=false;showBegin();}
+function setSpill(t,live){var p=document.getElementById('spill');p.textContent=t;p.className='spill'+(live?' live':'');}
+
+// ── Warm ambient music ────────────────────────────────────────────
+function initAudio(){
+  audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  masterGain=audioCtx.createGain();masterGain.gain.value=1;masterGain.connect(audioCtx.destination);
+  function makeReverb(dur,decay){var len=audioCtx.sampleRate*dur,buf=audioCtx.createBuffer(2,len,audioCtx.sampleRate);for(var c=0;c<2;c++){var d=buf.getChannelData(c);for(var i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,decay);}var conv=audioCtx.createConvolver();conv.buffer=buf;return conv;}
+  var rev=makeReverb(3.5,2.2);
+  musicGain=audioCtx.createGain();musicGain.gain.value=parseFloat(document.getElementById('mvol').value);
+  rev.connect(musicGain);musicGain.connect(masterGain);
+  var dryGain=audioCtx.createGain();dryGain.gain.value=0.3;dryGain.connect(musicGain);
+  var lpf=audioCtx.createBiquadFilter();lpf.type='lowpass';lpf.frequency.value=900;lpf.Q.value=0.5;lpf.connect(rev);lpf.connect(dryGain);
+  var now=audioCtx.currentTime+0.8;
+  var freqs=[130.81,146.83,164.81,196.00,220.00,261.63,293.66,329.63,392.00,440.00];
+  var bass=[65.41,73.42,82.41,98.00];
+  function tone(freq,start,dur,vol,detune){var osc=audioCtx.createOscillator(),g=audioCtx.createGain();osc.type='sine';osc.frequency.value=freq;if(detune)osc.detune.value=detune;var att=Math.min(2.5,dur*0.15),rel=Math.min(3,dur*0.25);g.gain.setValueAtTime(0,start);g.gain.linearRampToValueAtTime(vol,start+att);g.gain.setValueAtTime(vol,start+dur-rel);g.gain.linearRampToValueAtTime(0,start+dur);osc.connect(g);g.connect(lpf);osc.start(start);osc.stop(start+dur);musicNodes.push(osc);}
+  var chords=[[0,2,4,5],[2,4,6,7],[0,3,5,8],[1,3,5,6],[0,2,5,7]];
+  for(var ci=0;ci<80;ci++){var ch=chords[ci%chords.length],t=now+ci*18;ch.forEach(function(ni){tone(freqs[ni],t,22,0.022);tone(freqs[ni],t+0.3,22,0.008,8);});}
+  for(var bi=0;bi<50;bi++)tone(bass[bi%bass.length],now+bi*22,25,0.018);
+  var mel=[0,2,4,2,5,4,2,0,4,5,2,4,0,2,4,7,5,4,2,0],mt=now+3;
+  for(var mi=0;mi<180;mi++){var ni=mel[mi%mel.length],mfreq=freqs[ni+1]||freqs[ni];tone(mfreq,mt,8,0.016);if(mi%4===0)tone(mfreq*2,mt+0.5,5,0.006);mt+=4+(mi%5)*0.8;}
+  var shimFreqs=[523,659,784,1047],st=now+5;
+  for(var si2=0;si2<200;si2++){tone(shimFreqs[si2%shimFreqs.length],st,12,0.004);st+=6+(si2%3)*2;}
+}
+
+function setMusicVol(v){if(musicGain)musicGain.gain.value=parseFloat(v);}
+
+function stopAll(){
+  C.playing=false;C.paused=false;C.resting=false;
+  clearInterval(C.iv);stopCurrentAudio();
+  musicNodes.forEach(function(n){try{n.stop();}catch(e){}});musicNodes=[];
+  if(masterGain){try{masterGain.disconnect();}catch(e){}masterGain=null;}
+  if(audioCtx){try{audioCtx.close();}catch(e){}audioCtx=null;}
+  musicGain=null;
+}
+
+setAccent(SESSIONS[0]);
+</script>
+</body>
+</html>
